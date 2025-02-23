@@ -89,7 +89,7 @@ train_data = torchvision.datasets.ImageFolder(root = sorted_train_images_path, t
 test_data = torchvision.datasets.ImageFolder(root = sorted_test_images_path, transform = transform_custom)
 
 train_loader = torch.utils.data.DataLoader(train_data, batch_size = 32, shuffle = True, num_workers = 4)
-test_loader = torch.utils.data.DataLoader(train_data, batch_size = 32, shuffle = True, num_workers = 4)
+test_loader = torch.utils.data.DataLoader(test_data, batch_size = 32, shuffle = True, num_workers = 4)
 
 image, label = train_data[0]
 image.size() # torch.Size[x , y , z]
@@ -147,6 +147,8 @@ class NeuralNet(nn.Module): # base class for a neural network in PyTorch
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
+        x = F.log_softmax(x, dim=1) # likelihood functions, numerically better
+        # softmax activation layer
 
         # random/intialized deterministically at beginning,
         # then trained into neural network by showing image examples
@@ -163,11 +165,11 @@ optimizer = optim.SGD(model.paramters(), lr = .001, momentum = .9)
 
 
 # accuracy (for evaluation)
-def accuracy(y_pred, y_true):
-    _, predicted = torch.max(y_pred, 1)
-    correct = (predicted == y_true).sum().item()
-    total = y_true.size(0)
-    return correct / total
+#def accuracy(y_pred, y_true):
+   #_, predicted = torch.max(y_pred, 1)
+    #correct = (predicted == y_true).sum().item()
+    #total = y_true.size(0)
+    #return correct / total
 
 
 for epoch in range(64): # optimal training sessions
@@ -195,30 +197,33 @@ for epoch in range(64): # optimal training sessions
 
     # evaluation
 
+    #model.eval()
+    #correct_pred = 0
+    #total_pred = 0
+
+    #with torch.no_grad():
+      #for inputs, labels in test_loader:
+        #outputs = model(inputs)
+        #batch_accuracy = accuracy (outputs, labels)
+        #correct_pred += (outputs.argmax(1) == labels).sum().item()
+        #total_pred += labels.size(0)
+
+    #test_accuracy = correct_pred/total_pred
+    #print(f'Epoch {epoch} test accuracy: {test_accuracy:.5f}')
+
+
     model.eval()
-    correct_pred = 0
-    total_pred = 0
-
+    correct = 0
     with torch.no_grad():
-      for inputs, labels in test_loader:
-        outputs = model(inputs)
-        batch_accuracy = accuracy (outputs, labels)
-        correct_pred += (outputs.argmax(1) == labels).sum().item()
-        total_pred += labels.size(0)
+        prediction = output.argmax(dim=1, keepdim=True)
+        print("Model outputs", prediction)
 
-    test_accuracy = correct_pred/total_pred
-    print(f'Epoch {epoch} test accuracy: {test_accuracy:.5f}')
+        # check accucracy after predictions if desired (realtime updates)
+        correct += pred.eq(target.view_as(pred)).sum().item()
+        model_accuracy = correct / len(testloader.dataset)
+
+        print("model accuracy: ", model_accuracy)
 
 
-    # softmax activation layer
-    
-    prediction = model_softmax(data.x)
-    _, y_pred = pred_model.max(1) # max value with respect to axis one
-    
-    print("Model outputs", y_pred)
-    
-    # check accuracy after predictions if desired (realtime updates)
-    correct_guess = (data.y == y_pred).sum().item()
-    model_accuracy = correct_guess / len(data)
-    print("model accuracy: ", model_accuracy)
+
 
