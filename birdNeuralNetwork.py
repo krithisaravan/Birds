@@ -210,3 +210,15 @@ for epoch in range(64): # optimal training sessions
     print(f'Epoch {epoch} test accuracy: {test_accuracy:.5f}')
 
 
+# softmax activation layer
+
+prediction = model_softmax(data.x)
+_, y_pred = pred_model.max(1) # max value with respect to axis one
+
+print("Model outputs", y_pred)
+
+# check accuracy after predictions if desired (realtime updates)
+correct_guess = (data.y == y_pred).sum().item()
+model_accuracy = correct_guess / len(data)
+print("model accuracy: ", model_accuracy)
+
